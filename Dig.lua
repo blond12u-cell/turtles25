@@ -117,19 +117,28 @@ local function placeTorch()
 end
 
 local function digDownStaircase()
-    -- Dig forward, up, and down to create a 3-block tall staircase
-    -- First, dig forward
+    -- Dig forward to create the next step
     while turtle.dig() do end
-    turtle.forward()
+    if not turtle.forward() then
+        return false
+    end
     
-    -- Dig up
+    -- Dig the area above to make it 3 blocks tall
+    -- First, dig up (second block height)
     while turtle.digUp() do end
+    -- Move up to dig the third block height
+    if turtle.up() then
+        while turtle.digUp() do end
+        -- Move back down
+        turtle.down()
+    end
     
-    -- Dig down
+    -- Dig down to clear the next level
     while turtle.digDown() do end
-    
-    -- Move down to next level
-    turtle.down()
+    -- Move down to the next level
+    if not turtle.down() then
+        return false
+    end
     
     -- Check fuel
     if not refuel() then
@@ -148,24 +157,24 @@ local function digDownStaircase()
     return true
 end
 
-local function buildUpStaircase()
-    -- Fill gaps below and place torches every few steps
-    -- First, check if the block below is solid
-    if not turtle.detectDown() then
-        -- Try to place a block below
-        if selectNonEssentialItem() then
-            turtle.placeDown()
+local function isBedrock()
+    -- Try to dig down, if it returns false and we can't move down, it's likely bedrock
+    local success, data = turtle.inspectDown()
+    if success then
+        -- In ComputerCraft, bedrock has name "minecraft:bedrock"
+        if data.name == "minecraft:bedrock" then
+            return true
+        end
+        -- Try to dig to see if it's breakable
+        if turtle.digDown() then
+            return false
+        else
+            -- If we can't dig it, and it's not air, it might be bedrock
+            return true
         end
     end
-    
-    -- Move up
-    while turtle.digUp() do end
-    turtle.up()
-    
-    -- Place torch every 6 blocks (adjust as needed)
-    local currentY = ... -- We need to track Y coordinate
-    -- Since we don't have GPS, we'll place torches based on steps
-    -- For now, we'll track steps in a variable
+    -- If there's no block below, it's not bedrock
+    return false
 end
 
 local function main()
@@ -176,43 +185,40 @@ local function main()
     
     -- Dig down to bedrock
     while true do
-        -- Check if we're at bedrock (y=0)
-        -- Since we can't directly check Y coordinate, we'll detect bedrock by mining until we can't go down
+        -- Check if we're at bedrock
+        if isBedrock() then
+            print("Reached bedrock at depth " .. depth)
+            break
+        end
+        
+        -- Dig the next staircase segment
         if not digDownStaircase() then
+            print("Failed to dig down further")
             break
         end
         depth = depth + 1
         
-        -- Check if we've hit bedrock (the block below is unbreakable)
-        -- Try to dig down - if it's bedrock, it won't break
-        if not turtle.digDown() then
-            -- Check if we can move down
-            if not turtle.down() then
-                print("Reached bedrock at depth " .. depth)
-                break
-            else
-                turtle.up() -- We moved down, so move back up
-            end
-        else
-            turtle.down()
-            depth = depth + 1
+        -- Check fuel
+        if not refuel() then
+            print("Out of fuel!")
+            break
         end
     end
     
-    -- Now we're at the bottom, build our way up
+    -- Now we're at the bottom, build our way up and make sure the staircase is solid
     print("Building staircase up...")
     local torchCounter = 0
     while depth > 0 do
-        -- Place block below if needed
+        -- Ensure the block below us is solid
         if not turtle.detectDown() then
             if selectNonEssentialItem() then
                 turtle.placeDown()
             end
         end
         
-        -- Place torch every 6 blocks
+        -- Place torch every 5 blocks to prevent mob spawning
         torchCounter = torchCounter + 1
-        if torchCounter % 6 == 0 then
+        if torchCounter % 5 == 0 then
             placeTorch()
         end
         
@@ -224,6 +230,19 @@ local function main()
             print("Can't move up!")
             break
         end
+        
+        -- Check if we need to fill in the gap behind us to maintain 3-block height
+        -- Turn around to check the previous step
+        turtle.turnLeft()
+        turtle.turnLeft()
+        if not turtle.detect() then
+            -- There's a gap, fill it
+            if selectNonEssentialItem() then
+                turtle.place()
+            end
+        end
+        turtle.turnLeft()
+        turtle.turnLeft()
         
         -- Check fuel
         if not refuel() then
