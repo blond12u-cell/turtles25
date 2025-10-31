@@ -5,7 +5,7 @@
 local FUEL_SLOT = 16  -- Reserve last slot for fuel
 local MIN_FUEL = 20   -- Minimum fuel to keep in inventory (increased for more operations)
 
--- Refuel the turtle using coal from the fuel slot
+-- Refuel the turtle using fuel items from the fuel slot
 local function refuel()
     local fuelLevel = turtle.getFuelLevel()
     if fuelLevel == "unlimited" then
@@ -14,12 +14,29 @@ local function refuel()
     
     -- Check if we need more fuel
     if fuelLevel < MIN_FUEL then
+        print("Low fuel: " .. fuelLevel .. ", refueling...")
         turtle.select(FUEL_SLOT)
-        -- Keep trying to refuel until we have enough or run out of coal
-        while turtle.getFuelLevel() < MIN_FUEL + 10 do
+        -- Try to refuel up to MIN_FUEL + 100
+        while turtle.getFuelLevel() < MIN_FUEL + 100 do
             if not turtle.refuel(1) then
-                print("Out of fuel. Please add coal to slot " .. FUEL_SLOT)
-                return false
+                -- Check if there are fuel items in other slots
+                local foundFuel = false
+                for i = 1, 16 do
+                    if i ~= FUEL_SLOT then
+                        turtle.select(i)
+                        if turtle.refuel(0) then  -- Check if item is fuel
+                            turtle.select(FUEL_SLOT)
+                            turtle.transferTo(FUEL_SLOT)
+                            turtle.select(FUEL_SLOT)
+                            foundFuel = true
+                            break
+                        end
+                    end
+                end
+                if not foundFuel then
+                    print("Out of fuel. Please add fuel to any slot")
+                    return false
+                end
             end
         end
         print("Refueled. Current fuel: " .. turtle.getFuelLevel())
@@ -39,7 +56,7 @@ local function selectBuildingMaterial()
     return false
 end
 
--- Dig a 2-high tunnel forward while descending
+-- Dig and build a staircase pattern while descending
 local function digStaircase()
     local depth = 0
     
@@ -49,7 +66,7 @@ local function digStaircase()
             return false
         end
         
-        -- Dig forward (2 blocks high)
+        -- Dig forward and up to clear a 2-block high space
         turtle.dig()
         turtle.digUp()
         
@@ -59,14 +76,34 @@ local function digStaircase()
             return true
         end
         
-        -- Dig down in front (stair step)
+        -- Dig down to create the next step
         turtle.digDown()
         
-        -- Move down
+        -- Move down to the next level
         if not turtle.down() then
             print("Failed to move down at depth " .. depth)
             return false
         end
+        
+        -- Place a block behind to create the stair (above the turtle)
+        -- First, turn around to place the block
+        turtle.turnLeft()
+        turtle.turnLeft()
+        
+        -- Select building material
+        if not selectBuildingMaterial() then
+            print("No building materials to place stair block")
+            return false
+        end
+        
+        -- Place the block above to form the stair
+        if not turtle.placeUp() then
+            print("Couldn't place block above at depth " .. depth)
+        end
+        
+        -- Turn back to original direction
+        turtle.turnLeft()
+        turtle.turnLeft()
         
         depth = depth + 1
         
@@ -79,25 +116,27 @@ end
 
 -- Main function
 local function main()
-    print("Mining Turtle - 2-High Descending Tunnel")
-    print("Place coal in slot " .. FUEL_SLOT)
-    print("Place building materials in slots 1-" .. (FUEL_SLOT-1))
-    print("The turtle will dig a 2-high tunnel that descends forward")
+    print("Mining Turtle - Staircase Descent")
+    print("Place fuel (coal, lava buckets, etc.) in any slot")
+    print("Place building materials in any slot (will be used for stairs)")
+    print("The turtle will dig and build a staircase that descends forward")
     print("Press Enter to start...")
     read()
     
     -- Check initial fuel
     if not refuel() then
-        return false
-    end
-    
-    -- Select building material for placing blocks
-    if not selectBuildingMaterial() then
+        print("Initial refueling failed")
         return false
     end
     
     print("Starting descent...")
-    return digStaircase()
+    local success = digStaircase()
+    if success then
+        print("Descent completed successfully")
+    else
+        print("Descent failed")
+    end
+    return success
 end
 
 -- Run the program
