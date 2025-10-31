@@ -1,8 +1,9 @@
--- Miner.lua - Digs down to bedrock in a staircase pattern
+-- Miner.lua - Digs down in a staircase pattern
+-- Creates a 2-high tunnel that descends forward without changing horizontal direction
 -- Automatically manages fuel by refueling when needed
 
 local FUEL_SLOT = 16  -- Reserve last slot for fuel
-local MIN_FUEL = 10   -- Minimum fuel to keep in inventory
+local MIN_FUEL = 20   -- Minimum fuel to keep in inventory (increased for more operations)
 
 -- Refuel the turtle using coal from the fuel slot
 local function refuel()
@@ -38,7 +39,7 @@ local function selectBuildingMaterial()
     return false
 end
 
--- Dig down in a staircase pattern until bedrock is reached
+-- Dig a 2-high tunnel forward while descending
 local function digStaircase()
     local depth = 0
     
@@ -48,41 +49,29 @@ local function digStaircase()
             return false
         end
         
-        -- Try to dig down
-        if not turtle.digDown() then
-            -- If we can't dig down, we've hit bedrock or obstruction
-            if turtle.inspectDown() then
-                print("Reached bedrock or obstruction at depth " .. depth)
-                return true
-            end
+        -- Dig forward (2 blocks high)
+        turtle.dig()
+        turtle.digUp()
+        
+        -- Move forward
+        if not turtle.forward() then
+            print("Can't move forward. Obstruction at depth " .. depth)
+            return true
         end
+        
+        -- Dig down in front (stair step)
+        turtle.digDown()
         
         -- Move down
         if not turtle.down() then
             print("Failed to move down at depth " .. depth)
             return false
         end
+        
         depth = depth + 1
         
-        -- Try to dig forward (for staircase)
-        if not turtle.dig() then
-            -- If we can't dig forward, that's okay - just continue down
-        end
-        
-        -- Move forward to create staircase
-        if turtle.forward() then
-            -- Successfully moved forward, continue pattern
-        else
-            -- Can't move forward, try to dig and move again
-            turtle.dig()
-            turtle.forward()
-        end
-        
-        -- Turn right to create spiral pattern
-        turtle.turnRight()
-        
-        -- Report progress every 10 blocks
-        if depth % 10 == 0 then
+        -- Report progress every 5 blocks
+        if depth % 5 == 0 then
             print("Depth: " .. depth .. ", Fuel: " .. turtle.getFuelLevel())
         end
     end
@@ -90,9 +79,10 @@ end
 
 -- Main function
 local function main()
-    print("Mining Turtle - Staircase to Bedrock")
+    print("Mining Turtle - 2-High Descending Tunnel")
     print("Place coal in slot " .. FUEL_SLOT)
     print("Place building materials in slots 1-" .. (FUEL_SLOT-1))
+    print("The turtle will dig a 2-high tunnel that descends forward")
     print("Press Enter to start...")
     read()
     
