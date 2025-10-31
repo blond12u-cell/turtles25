@@ -180,7 +180,7 @@ end
 local function main()
     print("Starting mining operation...")
     
-    -- Track our depth
+    -- Track our depth (number of staircase segments)
     local depth = 0
     
     -- Dig down to bedrock
@@ -205,44 +205,52 @@ local function main()
         end
     end
     
-    -- Now we're at the bottom, build our way up and make sure the staircase is solid
+    -- Turn around to face the way we came
+    turtle.turnLeft()
+    turtle.turnLeft()
+    
+    -- Now we're at the bottom, go back up the staircase we dug
     print("Building staircase up...")
     local torchCounter = 0
-    while depth > 0 do
-        -- Ensure the block below us is solid
+    for i = 1, depth do
+        -- Place torch every 5 segments
+        torchCounter = torchCounter + 1
+        if torchCounter % 5 == 0 then
+            placeTorch()
+        end
+        
+        -- Ensure the area is 3 blocks tall and the path is solid
+        -- First, check and fill the block below us
         if not turtle.detectDown() then
             if selectNonEssentialItem() then
                 turtle.placeDown()
             end
         end
         
-        -- Place torch every 5 blocks to prevent mob spawning
-        torchCounter = torchCounter + 1
-        if torchCounter % 5 == 0 then
-            placeTorch()
-        end
-        
-        -- Move up
+        -- Move up to the next level
         while turtle.digUp() do end
-        if turtle.up() then
-            depth = depth - 1
-        else
-            print("Can't move up!")
+        if not turtle.up() then
+            print("Can't move up at step " .. i)
             break
         end
         
-        -- Check if we need to fill in the gap behind us to maintain 3-block height
-        -- Turn around to check the previous step
+        -- Check and fill the block behind us (which is now in front after turning)
         turtle.turnLeft()
         turtle.turnLeft()
         if not turtle.detect() then
-            -- There's a gap, fill it
             if selectNonEssentialItem() then
                 turtle.place()
             end
         end
         turtle.turnLeft()
         turtle.turnLeft()
+        
+        -- Move forward to complete the staircase step
+        while turtle.dig() do end
+        if not turtle.forward() then
+            print("Can't move forward at step " .. i)
+            break
+        end
         
         -- Check fuel
         if not refuel() then
