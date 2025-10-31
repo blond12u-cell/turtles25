@@ -219,8 +219,7 @@ local function main()
             placeTorch()
         end
         
-        -- Ensure the area is 3 blocks tall and the path is solid
-        -- First, check and fill the block below us
+        -- Ensure the block below us is solid
         if not turtle.detectDown() then
             if selectNonEssentialItem() then
                 turtle.placeDown()
@@ -234,21 +233,11 @@ local function main()
             break
         end
         
-        -- Check and fill the block behind us (which is now in front after turning)
-        turtle.turnLeft()
-        turtle.turnLeft()
-        if not turtle.detect() then
-            if selectNonEssentialItem() then
-                turtle.place()
-            end
-        end
-        turtle.turnLeft()
-        turtle.turnLeft()
-        
-        -- Move forward to complete the staircase step
+        -- Check if we've reached a 2-block tall wall (can't move forward)
+        -- Try to dig forward first
         while turtle.dig() do end
         if not turtle.forward() then
-            print("Can't move forward at step " .. i)
+            print("Reached a wall, stopping ascent")
             break
         end
         
