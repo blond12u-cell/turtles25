@@ -18,3 +18,23 @@ All right Leela, I'll try to get it working if not I'll let you know tommorow in
 Alright so I've tried out some more models but I've found that the one we made in lab is actually the strongest/most accurate, so what I'll do is write up the
 necessary stuff for the HW then send you what I wrote so you can see if you can understand it/it will be accepted by him then I can hit submit cause it will
 count for both of us it says
+
+
+HW9? Its better formatted in actual canvas
+
+First we tried NVIDIA: Nemotron Nano 12B 2 VL (free), which had a latency of 0.63 and 94.81tps
+- Didn't work well at all, got 2 attempts but both broke/didn't do what we wanted and since it kept spamming re-attempts we maxed out the 50 free uses per day
+Next was Qwen: Qwen3 VL 32B Instruct which costed $1.10 pmot, 1.52s latency and 65.10tps
+- Worked semi well but always had a problem even if we tried to correct it
+Third was MiniMax: MiniMax M2 which costed $0.45 pmot, 0.19s latency and 85.30tps
+- While fast it never understood programming into Minecraft very well
+
+Last was DeepSeek: DeepSeek V3.1 with a $0.80 pmot, 0.60s latency and 15.47tps
+Worked the best out of all 4 models, only had to be correct a few times
+
+The most functionality we got was all parts of the instructions from Lab 9 while using Deepseek
+One problem came from when we had to use Qwen which left us with the error of not placing the chest correctly, solved by switching models
+Only unable to solve problem was repeating code that wasn't needed but didn't mess up the turtles digging or ascent
+
+
+URL https://github.com/blond12u-cell/turtles25/tree/main
