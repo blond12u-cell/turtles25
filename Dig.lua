@@ -1,4 +1,4 @@
--- Dig.lua - Mining program to dig staircase to bedrock and back
+-- Dig.lua - Mining program to dig a 3 block tall staircase to bedrock and back
 
 local function refuel()
     local fuelLevel = turtle.getFuelLevel()
