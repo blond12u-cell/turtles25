@@ -1,61 +1,32 @@
-local args = { ... }
-if #args < 1 then
-	print("Usage: bridge 10")
-	return
-end
+blockstoDig = 10
+blockstoForward = 5
+blockstoSpin = 1
 
-local nn = args[1]
+for i = 1, blockstoDig do
+	turtle.digDown()
+	turtle.down()
 
-print("Starting, nn = " .. nn)
+end 
 
-local function refuel()
-	turtle.select(1)
-	turtle.refuel(10)
-	print("Current fuel: " .. turtle.getFuelLevel())
-end
-
-local function selectBlock()
-	turtle.select(2)
-end
-
-local function build()
-	selectBlock()
-	if not turtle.detectDown() then
-		turtle.placeDown()
-	end
-	turtle.turnRight()
-	if not turtle.detect() then
-		turtle.place()
-	end
-	turtle.turnLeft()
-end
-
-local function move()
-	if turtle.detect() then
-		turtle.dig()
-	end
+for i = 1, blockstoForward do
+	turtle.dig()
 	turtle.forward()
-	if turtle.detectUp() then
-		turtle.digUp()
-	end
+
 end
 
-local function buildHalf(xx)
-	for _ii = 1, xx do
-		move()
-		build()
-	end
+for i = 1, blockstoSpin do
+	turtle.turnRight()
+	turtle.turnRight()
+
+end 
+
+for i = 1, blockstoForward do
+	turtle.dig()
+	turtle.forward()
 end
 
-local function turnAround()
-	move()
-	turtle.turnLeft()
-	move()
-	turtle.turnLeft()
+for i = 1, blockstoDig do
+	turtle.digUp()
+	turtle.up()
+	
 end
-
-refuel()
-buildHalf(nn)
-turnAround()
-buildHalf(nn)
-turnAround()
